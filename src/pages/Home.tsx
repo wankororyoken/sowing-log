@@ -1,0 +1,70 @@
+import { useLiveQuery } from 'dexie-react-hooks'
+import { Link } from 'react-router-dom'
+import { Page } from '../components/Layout'
+import { db } from '../db/db'
+import { listAlive } from '../db/repo'
+
+export function Home() {
+  const counts = useLiveQuery(async () => ({
+    seeds: (await listAlive(db.seeds)).filter((s) => !s.finished).length,
+    fields: (await listAlive(db.fields)).length,
+    rolls: (await listAlive(db.rolls)).length,
+    records: (await listAlive(db.sowingRecords)).length,
+  }))
+
+  const steps = [
+    { done: (counts?.fields ?? 0) > 0, to: '/more/fields/new', label: '圃場・ハウスを登録' },
+    { done: (counts?.rolls ?? 0) > 0, to: '/more/rolls', label: '持っているロールを登録' },
+    { done: (counts?.seeds ?? 0) > 0, to: '/seeds/new', label: '種袋を登録' },
+  ]
+
+  return (
+    <Page title="播種記録">
+      <div className="stats">
+        <Link to="/seeds" className="stat">
+          <span className="stat-num">{counts?.seeds ?? '–'}</span>
+          <span className="stat-label">手持ちの種</span>
+        </Link>
+        <Link to="/more/fields" className="stat">
+          <span className="stat-num">{counts?.fields ?? '–'}</span>
+          <span className="stat-label">圃場</span>
+        </Link>
+        <Link to="/more/rolls" className="stat">
+          <span className="stat-num">{counts?.rolls ?? '–'}</span>
+          <span className="stat-label">ロール</span>
+        </Link>
+      </div>
+
+      {steps.some((s) => !s.done) && (
+        <section className="card">
+          <h2>はじめに</h2>
+          <ul className="steps">
+            {steps.map((s) => (
+              <li key={s.to} className={s.done ? 'done' : ''}>
+                <span aria-hidden>{s.done ? '✓' : '○'}</span>
+                {s.done ? s.label : <Link to={s.to}>{s.label}</Link>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="card">
+        <h2>最近の播種記録</h2>
+        <p className="muted">播種記録の入力は次のステップで追加します。</p>
+      </section>
+    </Page>
+  )
+}
+
+export function ComingSoon({ title }: { title: string }) {
+  return (
+    <Page title={title}>
+      <p className="empty">
+        この画面は次のステップで作ります。
+        <br />
+        先に「種DB」と「その他」のマスタ登録をお試しください。
+      </p>
+    </Page>
+  )
+}
