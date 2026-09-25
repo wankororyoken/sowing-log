@@ -1,7 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
 import { Page } from '../components/Layout'
+import { RecordCard } from '../components/RecordCard'
 import { db } from '../db/db'
+import { loadSummaries } from '../db/records'
 import { listAlive } from '../db/repo'
 
 export function Home() {
@@ -11,6 +13,7 @@ export function Home() {
     rolls: (await listAlive(db.rolls)).length,
     records: (await listAlive(db.sowingRecords)).length,
   }))
+  const recent = useLiveQuery(async () => (await loadSummaries()).slice(0, 5))
 
   const steps = [
     { done: (counts?.fields ?? 0) > 0, to: '/more/fields/new', label: '圃場・ハウスを登録' },
@@ -49,22 +52,24 @@ export function Home() {
         </section>
       )}
 
-      <section className="card">
+      <Link to="/record" className="btn primary block big-action">
+        ＋ 播種を記録
+      </Link>
+
+      <div className="section-head">
         <h2>最近の播種記録</h2>
-        <p className="muted">播種記録の入力は次のステップで追加します。</p>
-      </section>
+        {recent && recent.length > 0 && <Link to="/history?view=date">すべて見る</Link>}
+      </div>
+      {recent && recent.length === 0 ? (
+        <p className="muted small">まだ記録がありません。</p>
+      ) : (
+        <ul className="card-list">
+          {recent?.map((s) => (
+            <RecordCard key={s.record.id} summary={s} />
+          ))}
+        </ul>
+      )}
     </Page>
   )
 }
 
-export function ComingSoon({ title }: { title: string }) {
-  return (
-    <Page title={title}>
-      <p className="empty">
-        この画面は次のステップで作ります。
-        <br />
-        先に「種DB」と「その他」のマスタ登録をお試しください。
-      </p>
-    </Page>
-  )
-}

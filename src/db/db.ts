@@ -54,6 +54,10 @@ export class SowingDB extends Dexie {
     this.version(2).stores({
       farms: 'id, farmId, updatedAt',
     })
+    // v3: 作物別履歴のため播種記録に cropId の索引を追加
+    this.version(3).stores({
+      sowingRecords: 'id, farmId, sownAt, fieldId, cropId, updatedAt',
+    })
   }
 }
 

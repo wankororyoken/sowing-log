@@ -1,6 +1,6 @@
 import { createHashRouter, RouterProvider } from 'react-router-dom'
 import { AppLayout } from './components/Layout'
-import { ComingSoon, Home } from './pages/Home'
+import { Home } from './pages/Home'
 import { BackupPage } from './pages/more/BackupPage'
 import { CropsPage } from './pages/more/CropsPage'
 import { FieldForm, FieldList } from './pages/more/FieldsPage'
@@ -8,6 +8,10 @@ import { MachinePage } from './pages/more/MachinePage'
 import { MoreMenu } from './pages/more/MoreMenu'
 import { RollCatalog, RollForm, RollList } from './pages/more/RollsPage'
 import { SettingsPage } from './pages/more/SettingsPage'
+import { CropHistory, History } from './pages/records/History'
+import { RecordDetail } from './pages/records/RecordDetail'
+import { RecordFormPage } from './pages/records/RecordForm'
+import { RecordStart } from './pages/records/RecordStart'
 import { SeedDetail } from './pages/seeds/SeedDetail'
 import { SeedForm } from './pages/seeds/SeedForm'
 import { SeedList } from './pages/seeds/SeedList'
@@ -18,8 +22,12 @@ const router = createHashRouter([
     element: <AppLayout />,
     children: [
       { path: '/', element: <Home /> },
-      { path: '/record', element: <ComingSoon title="播種を記録" /> },
-      { path: '/history', element: <ComingSoon title="履歴" /> },
+      { path: '/record', element: <RecordStart /> },
+      { path: '/record/new/:method', element: <RecordFormPage /> },
+      { path: '/records/:id', element: <RecordDetail /> },
+      { path: '/records/:id/edit', element: <RecordFormPage /> },
+      { path: '/history', element: <History /> },
+      { path: '/history/crop/:cropId', element: <CropHistory /> },
       { path: '/seeds', element: <SeedList /> },
       { path: '/seeds/new', element: <SeedForm /> },
       { path: '/seeds/:id', element: <SeedDetail /> },

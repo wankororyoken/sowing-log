@@ -2,7 +2,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Empty, Page } from '../../components/Layout'
 import { PhotoById } from '../../components/PhotoViewer'
+import { RecordCard } from '../../components/RecordCard'
 import { db } from '../../db/db'
+import { loadSummaries } from '../../db/records'
 import { getAlive, softDelete } from '../../db/repo'
 import { formatDate } from '../../lib/format'
 
@@ -14,8 +16,11 @@ export function SeedDetail() {
     if (!seed) return null
     const crop = await getAlive(db.crops, seed.cropId)
     const usages = await db.sowingSeeds.where('seedId').equals(seed.id).filter((u) => !u.deletedAt).toArray()
-    const records = (await db.sowingRecords.bulkGet(usages.map((u) => u.recordId))).filter((r) => r && !r.deletedAt)
-    return { seed, crop, usages, records }
+    const recordIds = new Set(usages.map((u) => u.recordId))
+    const records = await loadSummaries((r) => recordIds.has(r.id))
+    // 削除済みの播種記録に付いていた使用量は数えない
+    const liveUsages = usages.filter((u) => records.some((r) => r.record.id === u.recordId))
+    return { seed, crop, usages: liveUsages, records }
   }, [id])
 
   if (data === undefined) return <Page title="読み込み中" back="/seeds">{null}</Page>
@@ -94,9 +99,9 @@ export function SeedDetail() {
         {records.length === 0 ? (
           <p className="muted">まだこの種を使った播種記録はありません。</p>
         ) : (
-          <ul className="simple-list">
+          <ul className="card-list">
             {records.map((r) => (
-              <li key={r!.id}>{formatDate(r!.sownAt)}</li>
+              <RecordCard key={r.record.id} summary={r} showCrop={false} />
             ))}
           </ul>
         )}

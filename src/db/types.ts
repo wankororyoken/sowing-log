@@ -113,6 +113,8 @@ export interface Weather {
 export interface SowingRecord extends BaseEntity {
   sownAt: string // ISO 日時
   method: SowingMethod
+  // 作物（履歴の集計用）。種袋を選んだ場合はその作物、自家採種など袋がない場合は直接選ぶ
+  cropId: string | null
   fieldId: string | null
   weather: Weather
   memo: string
