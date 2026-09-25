@@ -19,11 +19,12 @@ import {
   HAND_STYLE_LABEL,
   METHOD_LABEL,
   toLocalInput,
-  WEATHER_CONDITIONS,
 } from '../../domain/record'
 import { getSpacing } from '../../domain/spacing'
 import { numToInput, toNumberOrNull } from '../../lib/format'
+import { locationKey, type LatLng } from '../../lib/weather'
 import { SeedLinesEditor } from './SeedLinesEditor'
+import { WeatherSection } from './WeatherSection'
 
 // 入力中は文字列で持ち、保存時に数値へ変換する
 interface Settings {
@@ -109,6 +110,8 @@ function RecordForm() {
   const [photoIds, setPhotoIds] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [copiedFrom, setCopiedFrom] = useState<string | null>(null)
+  const [recordLoc, setRecordLoc] = useState<LatLng | null>(null)
+  const [weatherKey, setWeatherKey] = useState<string | null>(null)
 
   const fields = useFields()
   const crops = useCrops()
@@ -151,6 +154,14 @@ function RecordForm() {
         )
         setWeather(r.weather)
         setTempInput(numToInput(r.weather.tempC))
+        const loc = r.lat != null && r.lng != null ? { lat: r.lat, lng: r.lng } : null
+        setRecordLoc(loc)
+        if (r.weather.fetchedAt) {
+          // 取得済みの条件を覚えておき、開いただけでは取り直さない
+          const f = await getAlive(db.fields, r.fieldId)
+          const fieldLoc = f?.lat != null && f.lng != null ? { lat: f.lat, lng: f.lng } : null
+          setWeatherKey(locationKey(fieldLoc ?? loc, toLocalInput(r.sownAt)))
+        }
         setMemo(r.memo)
         setPhotoIds(r.photoIds)
       } else {
@@ -227,6 +238,8 @@ function RecordForm() {
         method,
         cropId,
         fieldId: s.fieldId || null,
+        lat: recordLoc?.lat ?? null,
+        lng: recordLoc?.lng ?? null,
         weather: { ...weather, tempC: n(tempInput) },
         memo,
         photoIds,
@@ -441,32 +454,17 @@ function RecordForm() {
           </section>
         )}
 
-        <section className="form-section">
-          <h2>気象</h2>
-          <div className="chips">
-            {WEATHER_CONDITIONS.map((c) => (
-              <button
-                type="button"
-                key={c}
-                className={`chip${weather.condition === c ? ' on' : ''}`}
-                onClick={() => setWeather((w) => ({ ...w, condition: w.condition === c ? '' : c }))}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-          <div className="grid2">
-            <label className="field">
-              <span>天気（自由入力）</span>
-              <input value={weather.condition} onChange={(e) => setWeather((w) => ({ ...w, condition: e.target.value }))} />
-            </label>
-            <label className="field">
-              <span>気温（℃）</span>
-              <input inputMode="decimal" value={tempInput} onChange={(e) => setTempInput(e.target.value)} placeholder="任意" />
-            </label>
-          </div>
-          <p className="muted small">気温・地温・降水量の自動取得は次のステップで追加します。</p>
-        </section>
+        <WeatherSection
+          weather={weather}
+          setWeather={setWeather}
+          tempInput={tempInput}
+          onTempInput={setTempInput}
+          sownAtLocal={sownAt}
+          field={fields?.find((f) => f.id === s.fieldId)}
+          recordLoc={recordLoc}
+          onRecordLoc={setRecordLoc}
+          initialKey={weatherKey}
+        />
 
         <section className="form-section">
           <h2>メモ・写真</h2>

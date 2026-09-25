@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import { initApp } from './db/init'
+import { startWeatherAutoFill } from './lib/weatherFill'
 import './index.css'
 
 const root = createRoot(document.getElementById('root')!)
@@ -13,6 +14,7 @@ initApp()
         <App />
       </StrictMode>,
     )
+    startWeatherAutoFill()
   })
   .catch((e: unknown) => {
     console.error(e)

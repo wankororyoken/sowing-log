@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bagFractionLabel, estimateMachineHoles, estimateNursery } from './record'
+import { bagFractionLabel, daysAfterSowing, estimateMachineHoles, estimateNursery } from './record'
 
 describe('播種量', () => {
   it('袋の割合を表示用に変換する', () => {
@@ -21,5 +21,13 @@ describe('播種量', () => {
     expect(estimateNursery({ cellsPerContainer: 128, containerCount: 5, seedsPerCell: 2 })).toEqual({ cells: 640, seeds: 1280 })
     expect(estimateNursery({ cellsPerContainer: 128, containerCount: 5, seedsPerCell: null })).toEqual({ cells: 640, seeds: null })
     expect(estimateNursery({ cellsPerContainer: null, containerCount: 5, seedsPerCell: 1 })).toBeNull()
+  })
+})
+
+describe('経過日数', () => {
+  it('播種日を0日目として暦日で数える', () => {
+    expect(daysAfterSowing(new Date(2026, 8, 23, 23, 30).toISOString(), '2026-09-23')).toBe(0)
+    expect(daysAfterSowing(new Date(2026, 8, 23, 6, 0).toISOString(), '2026-09-27')).toBe(4)
+    expect(daysAfterSowing(new Date(2026, 11, 30, 9, 0).toISOString(), '2027-01-02')).toBe(3)
   })
 })

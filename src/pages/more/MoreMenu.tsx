@@ -6,6 +6,7 @@ const items = [
   { to: '/more/crops', title: '作物', sub: '作物名・読み・科' },
   { to: '/more/rolls', title: 'ロール', sub: '持っているロール・自作ロールの登録' },
   { to: '/more/machine', title: '播種機（AP-1）', sub: '点播間隔目安表・株間の確認' },
+  { to: '/more/event-types', title: '経過の種類', sub: '発芽・間引き・定植など（追加・並べ替え）' },
   { to: '/more/backup', title: 'バックアップ', sub: '全データの書き出し・読み込み（iCloud Drive など）' },
   { to: '/more/settings', title: '設定', sub: '記録者名・農場名' },
 ]

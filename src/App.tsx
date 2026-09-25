@@ -3,11 +3,13 @@ import { AppLayout } from './components/Layout'
 import { Home } from './pages/Home'
 import { BackupPage } from './pages/more/BackupPage'
 import { CropsPage } from './pages/more/CropsPage'
+import { EventTypesPage } from './pages/more/EventTypesPage'
 import { FieldForm, FieldList } from './pages/more/FieldsPage'
 import { MachinePage } from './pages/more/MachinePage'
 import { MoreMenu } from './pages/more/MoreMenu'
 import { RollCatalog, RollForm, RollList } from './pages/more/RollsPage'
 import { SettingsPage } from './pages/more/SettingsPage'
+import { EventForm } from './pages/records/EventForm'
 import { CropHistory, History } from './pages/records/History'
 import { RecordDetail } from './pages/records/RecordDetail'
 import { RecordFormPage } from './pages/records/RecordForm'
@@ -26,6 +28,8 @@ const router = createHashRouter([
       { path: '/record/new/:method', element: <RecordFormPage /> },
       { path: '/records/:id', element: <RecordDetail /> },
       { path: '/records/:id/edit', element: <RecordFormPage /> },
+      { path: '/records/:id/events/new', element: <EventForm /> },
+      { path: '/records/:id/events/:eventId', element: <EventForm /> },
       { path: '/history', element: <History /> },
       { path: '/history/crop/:cropId', element: <CropHistory /> },
       { path: '/seeds', element: <SeedList /> },
@@ -44,6 +48,7 @@ const router = createHashRouter([
       { path: '/more/machine', element: <MachinePage /> },
       { path: '/more/settings', element: <SettingsPage /> },
       { path: '/more/backup', element: <BackupPage /> },
+      { path: '/more/event-types', element: <EventTypesPage /> },
     ],
   },
 ])

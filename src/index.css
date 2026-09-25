@@ -1168,3 +1168,123 @@ select.narrow {
   line-height: 1;
   cursor: pointer;
 }
+
+/* ---------- progress ---------- */
+.timeline {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: 3.2em 1fr;
+  gap: 10px;
+  position: relative;
+  padding: 6px 0;
+}
+
+.timeline-item + .timeline-item {
+  border-top: 1px dashed var(--border);
+}
+
+.timeline-day {
+  font-weight: 700;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.timeline-item.sown .timeline-day {
+  color: var(--muted);
+}
+
+.timeline-body {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.timeline-title strong {
+  color: var(--primary);
+}
+
+.chips a.chip {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.chip.rating {
+  min-width: 48px;
+  font-size: 1.1rem;
+}
+
+input.unit {
+  width: 6em;
+  flex: none;
+}
+
+.warn {
+  color: var(--danger);
+  margin: 0;
+}
+
+.record-progress {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.waiting-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.waiting-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.waiting-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.waiting-info {
+  display: flex;
+  flex-direction: column;
+  color: var(--text);
+  text-decoration: none;
+  min-width: 0;
+}
+
+.type-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 16px;
+}
+
+.type-row .menu-title {
+  flex: 1;
+}
+
+.type-actions {
+  display: flex;
+}
+
+.type-actions .btn {
+  padding: 0 8px;
+}
+
+.kv.compact > div {
+  padding: 3px 0;
+  font-size: 0.9rem;
+}

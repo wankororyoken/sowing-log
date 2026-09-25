@@ -89,3 +89,22 @@ export function toLocalInput(iso: string): string {
 export function fromLocalInput(v: string): string {
   return new Date(v).toISOString()
 }
+
+// 播種日を0日目とした経過日数（暦日で数える）
+export function daysAfterSowing(sownAtIso: string, dateYmd: string): number {
+  const s = new Date(sownAtIso)
+  const start = Date.UTC(s.getFullYear(), s.getMonth(), s.getDate())
+  const [y, m, d] = dateYmd.split('-').map(Number)
+  return Math.round((Date.UTC(y, m - 1, d) - start) / 86_400_000)
+}
+
+export const RATINGS = ['◎', '○', '△', '×']
+
+// 経過の種類ごとの数値の単位の初期値
+export const EVENT_DEFAULT_UNIT: Record<string, string> = {
+  発芽: '%',
+  定植: '株',
+  収穫: 'kg',
+  追肥: 'kg',
+  潅水: 'L',
+}

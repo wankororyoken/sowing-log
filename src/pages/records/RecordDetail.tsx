@@ -1,10 +1,14 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Empty, Page } from '../../components/Layout'
 import { PhotoList } from '../../components/PhotoList'
-import { deleteRecord, loadSummaries } from '../../db/records'
+import { useEventTypes } from '../../db/events'
+import { deleteRecord, loadSummaries, type RecordSummary } from '../../db/records'
 import { FIELD_KIND_LABEL } from '../../domain/labels'
-import { bagFractionLabel, estimateMachineHoles, estimateNursery, HAND_STYLE_LABEL, METHOD_LABEL } from '../../domain/record'
+import { bagFractionLabel, daysAfterSowing, estimateMachineHoles, estimateNursery, HAND_STYLE_LABEL, METHOD_LABEL } from '../../domain/record'
+import { formatDate } from '../../lib/format'
+import { fillWeatherFor } from '../../lib/weatherFill'
 
 function formatDateTime(iso: string) {
   const d = new Date(iso)
@@ -80,6 +84,8 @@ export function RecordDetail() {
     ['気温', w.tempC != null ? `${w.tempC} ℃` : ''],
     ['最高/最低', w.tempMaxC != null && w.tempMinC != null ? `${w.tempMaxC} / ${w.tempMinC} ℃` : ''],
     ['地温', w.soilTempC != null ? `${w.soilTempC} ℃` : ''],
+    ['湿度', w.humidity != null ? `${w.humidity} %` : ''],
+    ['風速', w.windMs != null ? `${w.windMs} m/s` : ''],
     ['前3日降水', w.precipPrev3dMm != null ? `${w.precipPrev3dMm} mm` : ''],
   ]
 
@@ -132,7 +138,9 @@ export function RecordDetail() {
       </section>
 
       <KvCard title={METHOD_LABEL[r.method] + 'の設定'} rows={settingRows} />
-      <KvCard title="気象" rows={weatherRows} />
+      <KvCard title="気象" rows={weatherRows}>
+        <WeatherFetch summary={summary} />
+      </KvCard>
 
       {(r.memo || r.photoIds.length > 0) && (
         <section className="card">
@@ -142,10 +150,7 @@ export function RecordDetail() {
         </section>
       )}
 
-      <section className="card">
-        <h2>経過</h2>
-        <p className="muted small">発芽・間引き・定植・収穫などの経過記録は次のステップで追加します。</p>
-      </section>
+      <Timeline summary={summary} />
 
       <div className="form-actions">
         <Link to={`/record/new/${r.method}?from=${r.id}`} className="btn primary block">
@@ -159,20 +164,94 @@ export function RecordDetail() {
   )
 }
 
-function KvCard({ title, rows }: { title: string; rows: [string, string][] }) {
+function KvCard({ title, rows, children }: { title: string; rows: [string, string][]; children?: ReactNode }) {
   const shown = rows.filter(([, v]) => v)
-  if (!shown.length) return null
+  if (!shown.length && !children) return null
   return (
     <section className="card">
       <h2>{title}</h2>
-      <dl className="kv">
-        {shown.map(([k, v]) => (
-          <div key={k}>
-            <dt>{k}</dt>
-            <dd>{v}</dd>
+      {shown.length > 0 && (
+        <dl className="kv">
+          {shown.map(([k, v]) => (
+            <div key={k}>
+              <dt>{k}</dt>
+              <dd>{v}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {children}
+    </section>
+  )
+}
+
+function WeatherFetch({ summary }: { summary: RecordSummary }) {
+  const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle')
+  const [message, setMessage] = useState('')
+  const r = summary.record
+  if (r.weather.fetchedAt) return <p className="muted small">気温などは Open-Meteo から自動取得しました。</p>
+
+  async function run() {
+    setState('loading')
+    try {
+      const ok = await fillWeatherFor(r)
+      if (!ok) {
+        setState('error')
+        setMessage('圃場に位置が登録されていないため取得できません。圃場の位置を登録するか、編集画面で「現在地で取得」を使ってください。')
+      } else setState('idle')
+    } catch (e) {
+      setState('error')
+      setMessage((e as Error).message)
+    }
+  }
+
+  return (
+    <div>
+      <p className="muted small">{state === 'error' ? message : '気温などはまだ自動取得されていません。'}</p>
+      <button type="button" className="btn small" disabled={state === 'loading'} onClick={() => void run()}>
+        {state === 'loading' ? '取得中…' : '気象を取得'}
+      </button>
+    </div>
+  )
+}
+
+function Timeline({ summary }: { summary: RecordSummary }) {
+  const types = useEventTypes()
+  const r = summary.record
+  return (
+    <section className="card">
+      <h2>経過</h2>
+      <ol className="timeline">
+        <li className="timeline-item sown">
+          <span className="timeline-day">0日</span>
+          <div>
+            <div className="timeline-title">
+              {formatDate(r.sownAt)} {r.method === 'nursery' ? '育苗播種' : '播種'}
+            </div>
           </div>
+        </li>
+        {summary.events.map(({ event: e, type, transplantField }) => (
+          <li key={e.id} className="timeline-item">
+            <span className="timeline-day">{daysAfterSowing(r.sownAt, e.date)}日</span>
+            <Link to={`/records/${r.id}/events/${e.id}`} className="timeline-body">
+              <div className="timeline-title">
+                {formatDate(e.date)} <strong>{type?.name ?? '（種類不明）'}</strong> {e.rating}
+                {e.value != null && ` ${e.value}${e.valueUnit}`}
+              </div>
+              {transplantField && <div className="small">定植先: {transplantField.name}</div>}
+              {e.memo && <div className="small muted">{e.memo}</div>}
+              {e.photoIds.length > 0 && <div className="small muted">📷 {e.photoIds.length}枚</div>}
+            </Link>
+          </li>
         ))}
-      </dl>
+      </ol>
+      <div className="chips">
+        {types?.map((t) => (
+          <Link key={t.id} to={`/records/${r.id}/events/new?type=${t.id}`} className="chip">
+            ＋{t.name}
+          </Link>
+        ))}
+      </div>
     </section>
   )
 }

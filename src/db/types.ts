@@ -116,6 +116,9 @@ export interface SowingRecord extends BaseEntity {
   // 作物（履歴の集計用）。種袋を選んだ場合はその作物、自家採種など袋がない場合は直接選ぶ
   cropId: string | null
   fieldId: string | null
+  // 圃場に位置がないとき、気象取得に使った現在地
+  lat?: number | null
+  lng?: number | null
   weather: Weather
   memo: string
   photoIds: string[]

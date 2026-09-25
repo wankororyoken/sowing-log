@@ -4,6 +4,8 @@ import { Page } from '../components/Layout'
 import { RecordCard } from '../components/RecordCard'
 import { db } from '../db/db'
 import { loadSummaries } from '../db/records'
+import { daysAfterSowing } from '../domain/record'
+import { formatDate, todayYmd } from '../lib/format'
 import { listAlive } from '../db/repo'
 
 export function Home() {
@@ -14,6 +16,16 @@ export function Home() {
     records: (await listAlive(db.sowingRecords)).length,
   }))
   const recent = useLiveQuery(async () => (await loadSummaries()).slice(0, 5))
+  // 播種から3週間以内で、まだ発芽を記録していないもの
+  const waiting = useLiveQuery(async () => {
+    const since = Date.now() - 21 * 86_400_000
+    const germType = (await listAlive(db.eventTypes)).find((t) => t.name === '発芽')
+    const rows = await loadSummaries((r) => new Date(r.sownAt).getTime() >= since)
+    return {
+      germTypeId: germType?.id ?? '',
+      rows: rows.filter((s) => !s.events.some((e) => e.type?.name === '発芽')).reverse(),
+    }
+  })
 
   const steps = [
     { done: (counts?.fields ?? 0) > 0, to: '/more/fields/new', label: '圃場・ハウスを登録' },
@@ -55,6 +67,27 @@ export function Home() {
       <Link to="/record" className="btn primary block big-action">
         ＋ 播種を記録
       </Link>
+
+      {waiting && waiting.rows.length > 0 && (
+        <section className="card">
+          <h2>発芽の確認待ち</h2>
+          <ul className="waiting-list">
+            {waiting.rows.map((s) => (
+              <li key={s.record.id}>
+                <Link to={`/records/${s.record.id}`} className="waiting-info">
+                  <strong>{s.crop?.name ?? '（作物未設定）'}</strong>
+                  <span className="muted small">
+                    {formatDate(s.record.sownAt)} 播種・{daysAfterSowing(s.record.sownAt, todayYmd())}日目{s.field && `・${s.field.name}`}
+                  </span>
+                </Link>
+                <Link to={`/records/${s.record.id}/events/new?type=${waiting.germTypeId}`} className="btn small">
+                  発芽を記録
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="section-head">
         <h2>最近の播種記録</h2>
