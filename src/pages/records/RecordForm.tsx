@@ -300,7 +300,7 @@ function RecordForm() {
 
         <section className="form-section">
           <h2>種</h2>
-          <SeedLinesEditor lines={lines} onChange={setLines} />
+          <SeedLinesEditor lines={lines} onChange={setLines} defaultCropName={cropName} />
           {cropFromSeedsName ? (
             <p className="small">
               作物: <strong>{cropFromSeedsName}</strong>

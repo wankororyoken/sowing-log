@@ -1288,3 +1288,25 @@ input.unit {
   padding: 3px 0;
   font-size: 0.9rem;
 }
+
+/* ---------- sheet ---------- */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.topbar .btn {
+  white-space: nowrap;
+  padding: 0 6px;
+}
