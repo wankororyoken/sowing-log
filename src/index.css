@@ -1310,3 +1310,17 @@ input.unit {
   white-space: nowrap;
   padding: 0 6px;
 }
+
+.viewer {
+  z-index: 200; /* シート（50）より手前 */
+}
+
+.viewer-footer {
+  padding: 8px 16px calc(env(safe-area-inset-bottom) + 8px);
+}
+
+.viewer-footer .btn {
+  background: #222;
+  color: #fff;
+  border-color: #444;
+}

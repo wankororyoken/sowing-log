@@ -135,7 +135,7 @@ export function SeedLinesEditor({
       )}
 
       {registering && (
-        <Sheet title="種の登録" onClose={() => setRegistering(false)}>
+        <Sheet title="種の登録" onClose={() => setRegistering(false)} confirmClose="入力中の種の情報は保存されません。閉じますか？">
           <SeedEditor
             initialCropName={defaultCropName}
             onSaved={(seedId) => {

@@ -1,11 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { usePhotoUrl } from '../lib/photos'
 
 // 全画面表示。画像タップで等倍 ⇔ 拡大を切り替え、拡大中はスクロールで細部を読める。
+// シートなどスクロールする枠の中で開くと iOS Safari では枠内に閉じ込められ閉じるボタンが隠れるため、body 直下に出す。
 export function PhotoViewer({ url, alt, onClose }: { url: string; alt: string; onClose: () => void }) {
   const [zoom, setZoom] = useState(false)
-  return (
-    <div className="viewer" role="dialog" aria-label={alt}>
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return createPortal(
+    <div className="viewer" role="dialog" aria-modal="true" aria-label={alt}>
       <div className="viewer-bar">
         <span>{alt}</span>
         <span className="viewer-hint">{zoom ? 'タップで全体表示' : 'タップで拡大'}</span>
@@ -16,7 +27,13 @@ export function PhotoViewer({ url, alt, onClose }: { url: string; alt: string; o
       <div className={`viewer-body${zoom ? ' zoomed' : ''}`}>
         <img src={url} alt={alt} onClick={() => setZoom((z) => !z)} />
       </div>
-    </div>
+      <div className="viewer-footer">
+        <button type="button" className="btn block" onClick={onClose}>
+          閉じる
+        </button>
+      </div>
+    </div>,
+    document.body,
   )
 }
 
