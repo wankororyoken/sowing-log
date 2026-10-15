@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useRef, useState } from 'react'
 import { Page } from '../../components/Layout'
 import { db } from '../../db/db'
-import { exportBackup, importBackup, readBackup, saveBackupFile } from '../../lib/backup'
+import { exportBackup, importBackup, readBackup, saveBackupFile, summarizeBackup } from '../../lib/backup'
 import { formatDate } from '../../lib/format'
 
 const LAST_BACKUP_KEY = 'lastBackupAt'
@@ -38,11 +38,20 @@ export function BackupPage() {
     setMessage('')
     try {
       const backup = await readBackup(file)
-      if (!confirm(`${formatDate(backup.exportedAt)} のバックアップを読み込みます。同じデータは新しい方を残します。よろしいですか？`)) return
+      const n = summarizeBackup(backup)
+      const from = backup.exportedBy ? `${backup.exportedBy}さんの端末で` : ''
+      const ok = confirm(
+        `${from}${formatDate(backup.exportedAt)} に書き出したデータです。\n` +
+          `播種記録 ${n.records}件・種 ${n.seeds}件・経過 ${n.events}件・写真 ${n.photos}枚\n\n` +
+          'この端末のデータに統合します。この端末のデータは消えず、同じ記録は更新日時が新しい方を残します。よろしいですか？',
+      )
+      if (!ok) return
       const r = await importBackup(backup)
-      setMessage(`読み込みました（追加 ${r.added} 件 / 更新 ${r.updated} 件 / 変更なし ${r.skipped} 件）。`)
-      if (r.switchedFarm) {
-        alert('バックアップの農場に切り替えました。画面を再読み込みします。')
+      const parts = [`追加 ${r.added} 件`, `更新 ${r.updated} 件`, `変更なし ${r.skipped} 件`]
+      if (r.unified) parts.push(`同じ名前の作物・圃場などを ${r.unified} 件まとめました`)
+      setMessage(`${r.mode === 'restore' ? '復元' : '統合'}しました（${parts.join(' / ')}）。`)
+      if (r.mode === 'restore') {
+        alert('バックアップのデータを復元しました。画面を再読み込みします。')
         location.reload()
       }
     } catch (e) {
@@ -67,8 +76,19 @@ export function BackupPage() {
       </section>
 
       <section className="card">
-        <h2>読み込み</h2>
-        <p className="small">機種変更したときや、別の端末にデータを移すときに使います。今あるデータは消えず、同じデータは更新日時が新しい方を残します。</p>
+        <h2>読み込み・他の端末と統合</h2>
+        <p className="small">
+          別の端末で書き出したファイルを読み込むと、この端末のデータに統合します。この端末のデータは消えず、同じ記録は更新日時が新しい方を残します。同じ名前の作物・圃場・ロール・経過の種類は1つにまとめます。
+        </p>
+        <details className="howto">
+          <summary>2台の端末をそろえる手順</summary>
+          <ol className="small">
+            <li>端末Aで「バックアップを書き出す」→ AirDrop・iCloud Drive・LINE などで端末Bへ送る</li>
+            <li>端末Bで「バックアップファイルを選ぶ」→ 統合（Bには A と B の両方の記録がそろう）</li>
+            <li>端末Bで書き出し → 端末Aで読み込む（Aにも両方がそろう）</li>
+          </ol>
+          <p className="muted small">片方で削除・編集した記録も、新しい方としてもう一方に反映されます。</p>
+        </details>
         <button type="button" className="btn block" disabled={busy} onClick={() => fileRef.current?.click()}>
           バックアップファイルを選ぶ
         </button>
